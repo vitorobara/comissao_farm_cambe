@@ -31,6 +31,7 @@ def formatar_br(valor, e_financeiro=False):
 @st.cache_data
 def load_data():
     df = pd.read_excel('dadosABC.xlsx')
+    # Preenchimento automático dos nomes de produtos mesclados/nulos
     df['Produto'] = df['Produto'].ffill()
     df[['Ano', 'Mês']] = df['ano-mes'].str.split('-', expand=True)
     df['Ano'] = df['Ano'].astype(int)
@@ -84,7 +85,7 @@ df_filtrado = df_raw[
     (df_raw['ano-mes'] <= data_fim_str)
 ].copy()
 
-# --- CÁLCULO DINÂMICO DA CURVA ABC (CORRIGIDO) ---
+# --- CÁLCULO DINÂMICO DA CURVA ABC (AJUSTADO) ---
 df_abc_calc = df_filtrado.groupby('Produto')[coluna_analise].sum().reset_index()
 df_abc_calc = df_abc_calc.sort_values(by=coluna_analise, ascending=False).reset_index(drop=True)
 total_geral = df_abc_calc[coluna_analise].sum()
@@ -93,12 +94,10 @@ if total_geral > 0:
     df_abc_calc['Percentual'] = df_abc_calc[coluna_analise] / total_geral
     df_abc_calc['Acumulado'] = df_abc_calc['Percentual'].cumsum()
     
-    # Pega o percentual anterior para verificar a transição de faixa
+    # Adiciona acumulado anterior para garantir que a Classe A nunca fique vazia se o 1º item passar de 30%
     df_abc_calc['Acumulado_Anterior'] = df_abc_calc['Acumulado'].shift(1, fill_value=0)
     
     def classificar_abc_ajustado(row):
-        # Se o item (ou os itens anteriores) estão dentro dos 30%
-        # ou se é o primeiro item e ele ultrapassou os 30%
         if row['Acumulado_Anterior'] < 0.30:
             return 'Classe A'
         elif row['Acumulado_Anterior'] < 0.70:
@@ -112,6 +111,21 @@ else:
 
 mapeamento_classes = dict(zip(df_abc_calc['Produto'], df_abc_calc['Classe']))
 df_filtrado['Classe'] = df_filtrado['Produto'].map(mapeamento_classes)
+
+# --- CABEÇALHO PRINCIPAL (APENAS COM A LOGO) ---
+col_esq, col_centro, col_dir = st.columns([1, 2, 1])
+with col_centro:
+    try:
+        st.image('logo.png', use_container_width=True)
+    except Exception:
+        st.warning("Imagem 'logo.png' não encontrada na pasta do projeto.")
+
+st.markdown("""
+<div style="background-color: #f0f2f6; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #1e4620;">
+    <h3 style="margin: 0; color: #333;">Bem-vindo ao Painel de Monitoramento da Assistência Farmacêutica</h3>
+    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Município de Cambé - PR</p>
+</div>
+""", unsafe_allow_html=True)
 
 # --- CONFIGURAÇÃO DAS ABAS ---
 aba_intro, aba_classe, aba_med = st.tabs([
@@ -161,13 +175,12 @@ with aba_classe:
     else:
         if metodo_analise == "Consumo médio":
             df_top_med = df_classe.groupby('Produto')[coluna_analise].mean().reset_index()
-            titulo_grafico_1 = f"Top Medicamentos ({classe_selecionada}) - Média Mensal"
+            titulo_grafico_1 = f"Top 10 Medicamentos ({classe_selecionada}) - Média Mensal"
         else:
             df_top_med = df_classe.groupby('Produto')[coluna_analise].sum().reset_index()
-            titulo_grafico_1 = f"Top Medicamentos ({classe_selecionada}) - Total Acumulado"
+            titulo_grafico_1 = f"Top 10 Medicamentos ({classe_selecionada}) - Total Acumulado"
             
         df_top_10 = df_top_med.sort_values(by=coluna_analise, ascending=False).head(10).copy()
-        
         df_top_10['Valor_Formatado'] = df_top_10[coluna_analise].apply(lambda x: formatar_br(x, e_financeiro))
         
         fig_barras = px.bar(

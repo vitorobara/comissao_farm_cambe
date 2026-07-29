@@ -109,10 +109,6 @@ if total_geral > 0:
     df_abc_calc['Classe'] = df_abc_calc.apply(classificar_abc_ajustado, axis=1)
 else:
     df_abc_calc['Classe'] = 'Classe C'
-            
-    df_abc_calc['Classe'] = df_abc_calc.apply(classificar_abc, axis=1)
-else:
-    df_abc_calc['Classe'] = 'Classe C'
 
 mapeamento_classes = dict(zip(df_abc_calc['Produto'], df_abc_calc['Classe']))
 df_filtrado['Classe'] = df_filtrado['Produto'].map(mapeamento_classes)

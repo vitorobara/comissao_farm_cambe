@@ -84,7 +84,7 @@ df_filtrado = df_raw[
     (df_raw['ano-mes'] <= data_fim_str)
 ].copy()
 
-# --- CÁLCULO DINÂMICO DA CURVA ABC ---
+# --- CÁLCULO DINÂMICO DA CURVA ABC (CORRIGIDO) ---
 df_abc_calc = df_filtrado.groupby('Produto')[coluna_analise].sum().reset_index()
 df_abc_calc = df_abc_calc.sort_values(by=coluna_analise, ascending=False).reset_index(drop=True)
 total_geral = df_abc_calc[coluna_analise].sum()
@@ -93,13 +93,22 @@ if total_geral > 0:
     df_abc_calc['Percentual'] = df_abc_calc[coluna_analise] / total_geral
     df_abc_calc['Acumulado'] = df_abc_calc['Percentual'].cumsum()
     
-    def classificar_abc(row):
-        if row['Acumulado'] <= 0.30:
+    # Pega o percentual anterior para verificar a transição de faixa
+    df_abc_calc['Acumulado_Anterior'] = df_abc_calc['Acumulado'].shift(1, fill_value=0)
+    
+    def classificar_abc_ajustado(row):
+        # Se o item (ou os itens anteriores) estão dentro dos 30%
+        # ou se é o primeiro item e ele ultrapassou os 30%
+        if row['Acumulado_Anterior'] < 0.30:
             return 'Classe A'
-        elif row['Acumulado'] <= 0.70:
+        elif row['Acumulado_Anterior'] < 0.70:
             return 'Classe B'
         else:
             return 'Classe C'
+            
+    df_abc_calc['Classe'] = df_abc_calc.apply(classificar_abc_ajustado, axis=1)
+else:
+    df_abc_calc['Classe'] = 'Classe C'
             
     df_abc_calc['Classe'] = df_abc_calc.apply(classificar_abc, axis=1)
 else:

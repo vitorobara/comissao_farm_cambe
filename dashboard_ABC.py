@@ -113,19 +113,6 @@ else:
 mapeamento_classes = dict(zip(df_abc_calc['Produto'], df_abc_calc['Classe']))
 df_filtrado['Classe'] = df_filtrado['Produto'].map(mapeamento_classes)
 
-# --- CABEÇALHO PRINCIPAL ---
-col_logo_1, col_titulo_central, col_logo_2 = st.columns([1, 4, 1])
-with col_titulo_central:
-    st.markdown("<h2 style='text-align: center; color: #1e4620;'>Prefeitura Municipal de Cambé</h2>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center; color: #555;'>Secretaria Municipal de Saúde Pública</h4>", unsafe_allow_html=True)
-
-st.markdown("""
-<div style="background-color: #f0f2f6; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 5px solid #1e4620;">
-    <h3 style="margin: 0; color: #333;">Bem-vindo ao Painel de Monitoramento da Assistência Farmacêutica</h3>
-    <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">Município de Cambé - PR</p>
-</div>
-""", unsafe_allow_html=True)
-
 # --- CONFIGURAÇÃO DAS ABAS ---
 aba_intro, aba_classe, aba_med = st.tabs([
     "📂 INTRODUÇÃO", 

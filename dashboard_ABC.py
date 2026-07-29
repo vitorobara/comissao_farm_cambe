@@ -174,10 +174,10 @@ with aba_classe:
     else:
         if metodo_analise == "Consumo médio":
             df_top_med = df_classe.groupby('Produto')[coluna_analise].mean().reset_index()
-            titulo_grafico_1 = f"Top 10 Medicamentos ({classe_selecionada}) - Média Mensal"
+            titulo_grafico_1 = f"Top Medicamentos ({classe_selecionada}) - Média Mensal"
         else:
             df_top_med = df_classe.groupby('Produto')[coluna_analise].sum().reset_index()
-            titulo_grafico_1 = f"Top 10 Medicamentos ({classe_selecionada}) - Total Acumulado"
+            titulo_grafico_1 = f"Top Medicamentos ({classe_selecionada}) - Total Acumulado"
             
         df_top_10 = df_top_med.sort_values(by=coluna_analise, ascending=False).head(10).copy()
         
